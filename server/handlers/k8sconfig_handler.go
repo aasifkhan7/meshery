@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"time"
 	"net/http"
 	"path/filepath"
 
@@ -181,12 +182,12 @@ func (h *Handler) addK8SConfig(user *models.User, _ *models.Preference, w http.R
 		now := time.Now()
 
 		// Sample UUIDs
-		ownerUUID := uuid.NewV4()
-		instanceID := uuid.NewV4()
-		serverID := uuid.NewV4()
+		ownerUUID, _ := uuid.NewV4()
+		instanceID, _ := uuid.NewV4()
+		serverID, _ := uuid.NewV4()
 
 		// Create sample K8sContext instances
-		registeredContext := K8sContext{
+		registeredContext := models.K8sContext{
 			ID:   "context-1",
 			Name: "prod-cluster",
 			Auth: map[string]string{"token": "REDACTED"},
@@ -206,7 +207,7 @@ func (h *Handler) addK8SConfig(user *models.User, _ *models.Preference, w http.R
 			ConnectionID:      "conn-12345",
 		}
 
-		connectedContext := K8sContext{
+		connectedContext := models.K8sContext{
 			ID:   "context-2",
 			Name: "dev-cluster",
 			Auth: map[string]string{"token": "REDACTED"},
@@ -226,7 +227,7 @@ func (h *Handler) addK8SConfig(user *models.User, _ *models.Preference, w http.R
 			ConnectionID:      "conn-67890",
 		}
 
-		ignoredContext := K8sContext{
+		ignoredContext := models.K8sContext{
 			ID:   "context-3",
 			Name: "test-cluster",
 			Auth: map[string]string{"token": "REDACTED"},
@@ -246,7 +247,7 @@ func (h *Handler) addK8SConfig(user *models.User, _ *models.Preference, w http.R
 			ConnectionID:      "conn-13579",
 		}
 
-		erroredContext := K8sContext{
+		erroredContext := models.K8sContext{
 			ID:   "context-4",
 			Name: "staging-cluster",
 			Auth: map[string]string{"token": "REDACTED"},
