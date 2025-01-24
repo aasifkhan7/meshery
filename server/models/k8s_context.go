@@ -383,11 +383,11 @@ func (kc *K8sContext) GenerateKubeHandler() (*kubernetes.Client, error) {
 }
 
 func (kc *K8sContext) AssignVersion(handler *kubernetes.Client) error {
-	res, err := handler.KubeClient.DiscoveryClient.ServerVersion()
-	if err != nil {
-		kc.Version = "v1.20.4"
-		// return ErrUnreachableKubeAPI(err, kc.Server)
-	}
+	// _, err := handler.KubeClient.DiscoveryClient.ServerVersion()
+	// if err != nil {
+	// 	kc.Version = "v1.20.4"
+	// 	// return ErrUnreachableKubeAPI(err, kc.Server)
+	// }
 	kc.Version = "v1.20.4"
 	return nil
 }
