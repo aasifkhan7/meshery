@@ -195,6 +195,7 @@ const MesherySettingsEnvButtons = () => {
         })
         .catch((err) => {
           handleError('failed to upload kubernetes config')(err);
+          console.log(err);
         });
       formData.delete('k8sfile');
     }
