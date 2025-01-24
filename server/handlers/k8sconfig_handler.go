@@ -176,128 +176,127 @@ func (h *Handler) addK8SConfig(user *models.User, _ *models.Preference, w http.R
 	_ = provider.PersistEvent(event)
 	go h.config.EventBroadcaster.Publish(userID, event)
 
-
-	} else {
-
-		now := time.Now()
-
-		// Sample UUIDs
-		ownerUUID, _ := uuid.NewV4()
-		instanceID, _ := uuid.NewV4()
-		serverID, _ := uuid.NewV4()
-
-		// Create sample K8sContext instances
-		registeredContext := models.K8sContext{
-			ID:   "context-1",
-			Name: "prod-cluster",
-			Auth: map[string]string{"token": "REDACTED"},
-			Cluster: map[string]string{
-				"name":   "prod-cluster",
-				"server": "https://prod.example.com",
-			},
-			Server:            "https://prod.example.com",
-			Owner:             &ownerUUID,
-			CreatedBy:         &ownerUUID,
-			MesheryInstanceID: &instanceID,
-			KubernetesServerID: &serverID,
-			DeploymentType:    "out_cluster",
-			Version:           "v1.25.3",
-			UpdatedAt:         &now,
-			CreatedAt:         &now,
-			ConnectionID:      "conn-12345",
-		}
-
-		connectedContext := models.K8sContext{
-			ID:   "context-2",
-			Name: "dev-cluster",
-			Auth: map[string]string{"token": "REDACTED"},
-			Cluster: map[string]string{
-				"name":   "dev-cluster",
-				"server": "https://dev.example.com",
-			},
-			Server:            "https://dev.example.com",
-			Owner:             &ownerUUID,
-			CreatedBy:         &ownerUUID,
-			MesheryInstanceID: &instanceID,
-			KubernetesServerID: &serverID,
-			DeploymentType:    "in_cluster",
-			Version:           "v1.24.7",
-			UpdatedAt:         &now,
-			CreatedAt:         &now.Add(-time.Hour * 24),
-			ConnectionID:      "conn-67890",
-		}
-
-		ignoredContext := models.K8sContext{
-			ID:   "context-3",
-			Name: "test-cluster",
-			Auth: map[string]string{"token": "REDACTED"},
-			Cluster: map[string]string{
-				"name":   "test-cluster",
-				"server": "https://test.example.com",
-			},
-			Server:            "https://test.example.com",
-			Owner:             &ownerUUID,
-			CreatedBy:         &ownerUUID,
-			MesheryInstanceID: &instanceID,
-			KubernetesServerID: &serverID,
-			DeploymentType:    "out_cluster",
-			Version:           "v1.23.5",
-			UpdatedAt:         &now.Add(-time.Hour * 48),
-			CreatedAt:         &now.Add(-time.Hour * 72),
-			ConnectionID:      "conn-13579",
-		}
-
-		erroredContext := models.K8sContext{
-			ID:   "context-4",
-			Name: "staging-cluster",
-			Auth: map[string]string{"token": "REDACTED"},
-			Cluster: map[string]string{
-				"name":   "staging-cluster",
-				"server": "https://staging.example.com",
-			},
-			Server:            "https://staging.example.com",
-			Owner:             &ownerUUID,
-			CreatedBy:         &ownerUUID,
-			MesheryInstanceID: &instanceID,
-			KubernetesServerID: &serverID,
-			DeploymentType:    "in_cluster",
-			Version:           "",
-			UpdatedAt:         &now.Add(-time.Hour * 72),
-			CreatedAt:         &now.Add(-time.Hour * 96),
-			ConnectionID:      "conn-24680",
-		}
-
-		// Create the response
-		response := SaveK8sContextResponse{
-			RegisteredContexts: []K8sContext{registeredContext},
-			ConnectedContexts:  []K8sContext{connectedContext},
-			IgnoredContexts:    []K8sContext{ignoredContext},
-			ErroredContexts:    []K8sContext{erroredContext},
-		}
-
-		// Marshal to JSON and print
-		responseJSON, err := json.MarshalIndent(response, "", "  ")
-		if err != nil {
-			fmt.Println("Error marshalling response:", err)
-			return
-		}
-
-		// fmt.Println(string(responseJSON))
-
-		if err := json.NewEncoder(w).Encode(response); err != nil {
-			h.log.Error(models.ErrMarshal(err, "kubeconfig"))
-			http.Error(w, models.ErrMarshal(err, "kubeconfig").Error(), http.StatusInternalServerError)
-			return
-		}
-	
+	if err := json.NewEncoder(w).Encode(saveK8sContextResponse); err != nil {
+		h.log.Error(models.ErrMarshal(err, "kubeconfig"))
+		http.Error(w, models.ErrMarshal(err, "kubeconfig").Error(), http.StatusInternalServerError)
+	return
 	}
+	} 
+
+	// Set the content type to JSON
+	w.Header().Set("Content-Type", "application/json")
+
+	// Define the response as a raw JSON string (no need for typecasting or struct mapping)
+	response := `{
+		"registered_contexts": [
+			{
+				"id": "context-1",
+				"name": "prod-cluster",
+				"auth": {
+					"token": "REDACTED"
+				},
+				"cluster": {
+					"name": "prod-cluster",
+					"server": "https://prod.example.com"
+				},
+				"server": "https://prod.example.com",
+				"owner": "a12b34c5-678d-90ef-ghij-1234567890kl",
+				"created_by": "a12b34c5-678d-90ef-ghij-1234567890kl",
+				"meshery_instance_id": "b1c2d3e4-f567-89ab-cdef-0123456789gh",
+				"kubernetes_server_id": "c2d3e4f5-678a-90bc-dfgh-1234567890ij",
+				"deployment_type": "out_cluster",
+				"version": "v1.25.3",
+				"updated_at": "2025-01-24T12:00:00Z",
+				"created_at": "2025-01-23T10:00:00Z",
+				"connection_id": "conn-12345"
+			}
+		],
+		"connected_contexts": [
+			{
+				"id": "context-2",
+				"name": "dev-cluster",
+				"auth": {
+					"token": "REDACTED"
+				},
+				"cluster": {
+					"name": "dev-cluster",
+					"server": "https://dev.example.com"
+				},
+				"server": "https://dev.example.com",
+				"owner": "a12b34c5-678d-90ef-ghij-1234567890kl",
+				"created_by": "a12b34c5-678d-90ef-ghij-1234567890kl",
+				"meshery_instance_id": "b1c2d3e4-f567-89ab-cdef-0123456789gh",
+				"kubernetes_server_id": "c2d3e4f5-678a-90bc-dfgh-1234567890ij",
+				"deployment_type": "in_cluster",
+				"version": "v1.24.7",
+				"updated_at": "2025-01-24T12:00:00Z",
+				"created_at": "2025-01-22T08:30:00Z",
+				"connection_id": "conn-67890"
+			}
+		],
+		"ignored_contexts": [
+			{
+				"id": "context-3",
+				"name": "test-cluster",
+				"auth": {
+					"token": "REDACTED"
+				},
+				"cluster": {
+					"name": "test-cluster",
+					"server": "https://test.example.com"
+				},
+				"server": "https://test.example.com",
+				"owner": "a12b34c5-678d-90ef-ghij-1234567890kl",
+				"created_by": "a12b34c5-678d-90ef-ghij-1234567890kl",
+				"meshery_instance_id": "b1c2d3e4-f567-89ab-cdef-0123456789gh",
+				"kubernetes_server_id": "c2d3e4f5-678a-90bc-dfgh-1234567890ij",
+				"deployment_type": "out_cluster",
+				"version": "v1.23.5",
+				"updated_at": "2025-01-20T09:15:00Z",
+				"created_at": "2025-01-19T06:45:00Z",
+				"connection_id": "conn-13579"
+			}
+		],
+		"errored_contexts": [
+			{
+				"id": "context-4",
+				"name": "staging-cluster",
+				"auth": {
+					"token": "REDACTED"
+				},
+				"cluster": {
+					"name": "staging-cluster",
+					"server": "https://staging.example.com"
+				},
+				"server": "https://staging.example.com",
+				"owner": "a12b34c5-678d-90ef-ghij-1234567890kl",
+				"created_by": "a12b34c5-678d-90ef-ghij-1234567890kl",
+				"meshery_instance_id": "b1c2d3e4-f567-89ab-cdef-0123456789gh",
+				"kubernetes_server_id": "c2d3e4f5-678a-90bc-dfgh-1234567890ij",
+				"deployment_type": "in_cluster",
+				"version": "",
+				"updated_at": "2025-01-21T07:45:00Z",
+				"created_at": "2025-01-20T05:30:00Z",
+				"connection_id": "conn-24680"
+			}
+		]
+	}`
+
+	// Write the raw JSON response directly to the ResponseWriter
+	if _, err := w.Write([]byte(response)); err != nil {
+		h.log.Error(models.ErrMarshal(err, "kubeconfig"))
+		http.Error(w, models.ErrMarshal(err, "kubeconfig").Error(), http.StatusInternalServerError)
+		return
+	}
+
+
 
 
 
 	// if err := json.NewEncoder(w).Encode(saveK8sContextResponse); err != nil {
 	// 	h.log.Error(models.ErrMarshal(err, "kubeconfig"))
 	// 	http.Error(w, models.ErrMarshal(err, "kubeconfig").Error(), http.StatusInternalServerError)
-		return
+		// return
 	// }
 
 }
