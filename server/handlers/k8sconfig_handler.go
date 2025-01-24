@@ -63,6 +63,10 @@ func (h *Handler) K8SConfigHandler(w http.ResponseWriter, req *http.Request, pre
 // Connections which have state as "registered" are the only new ones, hence the GraphQL K8sContext subscription only sends an update to UI if any connection has registered state.
 // A registered connection might have been regsitered previously and is not required for K8sContext Subscription to notify, but this case is not considered here.
 func (h *Handler) addK8SConfig(user *models.User, _ *models.Preference, w http.ResponseWriter, req *http.Request, provider models.Provider) {
+	
+	
+	if 1 == 2 {
+
 	userID := uuid.FromStringOrNil(user.ID)
 
 	token, ok := req.Context().Value(models.TokenCtxKey).(string)
@@ -171,11 +175,130 @@ func (h *Handler) addK8SConfig(user *models.User, _ *models.Preference, w http.R
 	_ = provider.PersistEvent(event)
 	go h.config.EventBroadcaster.Publish(userID, event)
 
-	if err := json.NewEncoder(w).Encode(saveK8sContextResponse); err != nil {
-		h.log.Error(models.ErrMarshal(err, "kubeconfig"))
-		http.Error(w, models.ErrMarshal(err, "kubeconfig").Error(), http.StatusInternalServerError)
-		return
+
+	} else {
+
+		now := time.Now()
+
+		// Sample UUIDs
+		ownerUUID := uuid.NewV4()
+		instanceID := uuid.NewV4()
+		serverID := uuid.NewV4()
+
+		// Create sample K8sContext instances
+		registeredContext := K8sContext{
+			ID:   "context-1",
+			Name: "prod-cluster",
+			Auth: map[string]string{"token": "REDACTED"},
+			Cluster: map[string]string{
+				"name":   "prod-cluster",
+				"server": "https://prod.example.com",
+			},
+			Server:            "https://prod.example.com",
+			Owner:             &ownerUUID,
+			CreatedBy:         &ownerUUID,
+			MesheryInstanceID: &instanceID,
+			KubernetesServerID: &serverID,
+			DeploymentType:    "out_cluster",
+			Version:           "v1.25.3",
+			UpdatedAt:         &now,
+			CreatedAt:         &now,
+			ConnectionID:      "conn-12345",
+		}
+
+		connectedContext := K8sContext{
+			ID:   "context-2",
+			Name: "dev-cluster",
+			Auth: map[string]string{"token": "REDACTED"},
+			Cluster: map[string]string{
+				"name":   "dev-cluster",
+				"server": "https://dev.example.com",
+			},
+			Server:            "https://dev.example.com",
+			Owner:             &ownerUUID,
+			CreatedBy:         &ownerUUID,
+			MesheryInstanceID: &instanceID,
+			KubernetesServerID: &serverID,
+			DeploymentType:    "in_cluster",
+			Version:           "v1.24.7",
+			UpdatedAt:         &now,
+			CreatedAt:         &now.Add(-time.Hour * 24),
+			ConnectionID:      "conn-67890",
+		}
+
+		ignoredContext := K8sContext{
+			ID:   "context-3",
+			Name: "test-cluster",
+			Auth: map[string]string{"token": "REDACTED"},
+			Cluster: map[string]string{
+				"name":   "test-cluster",
+				"server": "https://test.example.com",
+			},
+			Server:            "https://test.example.com",
+			Owner:             &ownerUUID,
+			CreatedBy:         &ownerUUID,
+			MesheryInstanceID: &instanceID,
+			KubernetesServerID: &serverID,
+			DeploymentType:    "out_cluster",
+			Version:           "v1.23.5",
+			UpdatedAt:         &now.Add(-time.Hour * 48),
+			CreatedAt:         &now.Add(-time.Hour * 72),
+			ConnectionID:      "conn-13579",
+		}
+
+		erroredContext := K8sContext{
+			ID:   "context-4",
+			Name: "staging-cluster",
+			Auth: map[string]string{"token": "REDACTED"},
+			Cluster: map[string]string{
+				"name":   "staging-cluster",
+				"server": "https://staging.example.com",
+			},
+			Server:            "https://staging.example.com",
+			Owner:             &ownerUUID,
+			CreatedBy:         &ownerUUID,
+			MesheryInstanceID: &instanceID,
+			KubernetesServerID: &serverID,
+			DeploymentType:    "in_cluster",
+			Version:           "",
+			UpdatedAt:         &now.Add(-time.Hour * 72),
+			CreatedAt:         &now.Add(-time.Hour * 96),
+			ConnectionID:      "conn-24680",
+		}
+
+		// Create the response
+		response := SaveK8sContextResponse{
+			RegisteredContexts: []K8sContext{registeredContext},
+			ConnectedContexts:  []K8sContext{connectedContext},
+			IgnoredContexts:    []K8sContext{ignoredContext},
+			ErroredContexts:    []K8sContext{erroredContext},
+		}
+
+		// Marshal to JSON and print
+		responseJSON, err := json.MarshalIndent(response, "", "  ")
+		if err != nil {
+			fmt.Println("Error marshalling response:", err)
+			return
+		}
+
+		// fmt.Println(string(responseJSON))
+
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			h.log.Error(models.ErrMarshal(err, "kubeconfig"))
+			http.Error(w, models.ErrMarshal(err, "kubeconfig").Error(), http.StatusInternalServerError)
+			return
+		}
+	
 	}
+
+
+
+	// if err := json.NewEncoder(w).Encode(saveK8sContextResponse); err != nil {
+	// 	h.log.Error(models.ErrMarshal(err, "kubeconfig"))
+	// 	http.Error(w, models.ErrMarshal(err, "kubeconfig").Error(), http.StatusInternalServerError)
+		return
+	// }
+
 }
 
 // swagger:route DELETE /api/system/kubernetes SystemAPI idDeleteK8SConfig
